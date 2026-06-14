@@ -44,6 +44,12 @@ app.main()
     ).run()
 
     assert app.title[0].value == "Nerdbot"
+    intro = "\n".join(element.value for element in app.markdown)
+    assert "What you can ask" in intro
+    assert "SQL joins" in intro
+    assert "done" in intro
+    assert "recommend a book for Python" in intro
+    assert "recommend a cybersecurity resource" in intro
     assert app.error[0].value == MISSING_API_KEY_MESSAGE
     assert app.chat_input[0].disabled
 

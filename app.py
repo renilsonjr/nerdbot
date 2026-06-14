@@ -35,6 +35,20 @@ def main() -> None:
     st.write(
         "Connect what you study to real-world career examples and practice."
     )
+    st.markdown(
+        """
+**What you can ask**
+
+- Enter a study topic to get an explanation, career example, and exercise.
+- Type `done` after an exercise to see a suggested answer.
+- Ask for a book, course, article, video, or resource recommendation.
+
+**Try one of these**
+
+`SQL joins` · `done` · `recommend a book for Python` ·
+`recommend a cybersecurity resource`
+"""
+    )
 
     initialize_chat_history()
     display_chat_history()

@@ -6,11 +6,11 @@ Nerdbot is an AI-powered study mentor for students, career changers, and
 early-career developers. Enter a topic and receive a focused lesson through
 either a terminal chatbot or a Streamlit web app.
 
-Every response follows one consistent learning structure:
+Nerdbot supports three focused response modes:
 
-1. Explanation
-2. Real-World / Career Example
-3. Practice Exercise
+1. Study a topic
+2. Review a practice exercise answer
+3. Find a curated learning resource
 
 ## Problem It Solves
 
@@ -33,7 +33,7 @@ concept, see its career relevance, and apply it immediately.
 - Keeps chat history during a Streamlit session
 - Handles blank input and missing API configuration clearly
 - Uses a configurable OpenAI model
-- Includes an eight-test offline suite that mocks OpenAI API calls
+- Includes an offline test suite that mocks OpenAI API calls
 
 ## Tech Stack
 
@@ -54,6 +54,8 @@ nerdbot/
 ├── AGENTS.md
 ├── README.md
 ├── app.py                  # Streamlit web interface
+├── data/
+│   └── resources.json      # Curated learning resources
 ├── main.py                 # Terminal interface
 ├── pytest.ini
 ├── requirements.txt
@@ -201,9 +203,11 @@ suite does not send requests to the real OpenAI API.
 - Binary search
 - CSS Flexbox
 
-## Example Output Format
+## Response Modes
 
-Every successful answer follows exactly this structure:
+### 1. Study Topic
+
+Enter a topic such as `SQL joins`. Nerdbot responds with exactly:
 
 ```text
 1. Explanation
@@ -217,9 +221,11 @@ project.
 A small hands-on task that applies the topic.
 ```
 
-After completing the exercise, enter `done`, `show answer`, `answer`,
+### 2. Exercise Answer
+
+After completing an exercise, enter `done`, `show answer`, `answer`,
 `I finished`, or `finished`. Nerdbot uses the previous exercise and responds
-with:
+with exactly:
 
 ```text
 1. Suggested Answer
@@ -232,8 +238,11 @@ A beginner-friendly explanation of the solution.
 A likely mistake and guidance for avoiding it.
 ```
 
+### 3. Curated Resource
+
 Ask for a book, course, article, video, resource, or recommendation to receive
-an offline recommendation from Nerdbot's curated catalog:
+an offline recommendation from Nerdbot's curated catalog. The response uses
+exactly:
 
 ```text
 1. Recommended Resource
@@ -248,6 +257,14 @@ A small task to complete while using the resource.
 
 The catalog currently covers Python, SQL, HTML/CSS, JavaScript, APIs, data
 analysis, and cybersecurity basics. Resource requests do not use web search.
+
+## Release History
+
+| Release | Highlights |
+|---|---|
+| `v0.1-streamlit-mvp` | Terminal and Streamlit chat interfaces with the original study-topic response format |
+| `v0.2-exercise-answer` | Previous-exercise context and suggested answer responses |
+| `v0.3-curated-resources` | Offline, curated recommendations across seven beginner topics |
 
 ## MVP Limitations
 
