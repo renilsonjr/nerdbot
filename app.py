@@ -45,7 +45,7 @@ def main() -> None:
 
 **Try one of these**
 
-`SQL joins` · `done` · `recommend a book for Python` ·
+`SQL joins` ·  `recommend a book for Python` ·
 `recommend a cybersecurity resource`
 """
     )
