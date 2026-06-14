@@ -8,13 +8,20 @@ Instructions for Codex and AI coding agents working on this project.
 
 Nerdbot is an AI study mentor built in Python.
 
-The user types a study topic. The bot always responds in exactly 3 blocks:
+For a normal study topic, the bot responds in exactly 3 blocks:
 
 1. Explanation
 2. Real-World / Career Example
 3. Practice Exercise
 
-This fixed structure is the core product decision. Do not change it.
+When the user asks for the previous exercise answer, the bot responds in
+exactly 3 different blocks:
+
+1. Suggested Answer
+2. Why It Works
+3. Common Mistake
+
+These fixed structures are core product decisions. Do not change them.
 
 ---
 
@@ -49,8 +56,8 @@ Always load them using `os.getenv()` via `src/config.py`.
 | File | Purpose |
 |---|---|
 | `src/config.py` | Loads and exposes environment variables |
-| `src/prompts.py` | Contains the system prompt string only |
-| `src/bot.py` | Contains `generate_response(topic: str) -> str` |
+| `src/prompts.py` | Contains the topic and exercise-answer prompts |
+| `src/bot.py` | Contains shared detection and response generation |
 | `main.py` | Terminal chat loop — imports from `src/` only |
 | `app.py` | Streamlit web interface — imports from `src/` only |
 | `tests/test_bot.py` | Bot and terminal tests using mocked responses |
@@ -79,9 +86,10 @@ Do not change this signature without updating the tests.
 
 ## System prompt rules
 
-The system prompt lives in `src/prompts.py` as a string constant named `SYSTEM_PROMPT`.
+Both prompts live in `src/prompts.py` as `SYSTEM_PROMPT` and
+`EXERCISE_ANSWER_PROMPT`.
 
-The prompt must instruct the model to:
+The topic prompt must instruct the model to:
 
 - Always respond in exactly 3 numbered blocks
 - Keep explanations beginner-friendly by default
@@ -89,9 +97,15 @@ The prompt must instruct the model to:
 - Never mention that it is following a prompt
 - Make a reasonable assumption if the topic is unclear and still respond
 
-Do not modify the prompt structure without updating `tests/test_bot.py` to match.
+The exercise-answer prompt must require exactly:
 
-The three headings are a product contract shared by both interfaces. Future
+1. Suggested Answer
+2. Why It Works
+3. Common Mistake
+
+Do not modify either prompt structure without updating `tests/test_bot.py`.
+
+Each set of three headings is a product contract shared by both interfaces. Future
 features may change the detail or difficulty of an answer, but must not rename,
 reorder, remove, or add to these blocks.
 
@@ -103,8 +117,16 @@ Required heading strings:
 3. Practice Exercise
 ```
 
-Do not create interface-specific prompts. Both `main.py` and `app.py` must
-continue to use `generate_response()` and the shared `SYSTEM_PROMPT`.
+Required exercise-answer heading strings:
+
+```text
+1. Suggested Answer
+2. Why It Works
+3. Common Mistake
+```
+
+Do not create interface-specific prompts. Both `main.py` and `app.py` must use
+the shared detection and generation helpers from `src/bot.py`.
 
 ---
 

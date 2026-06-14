@@ -14,6 +14,15 @@ Mock career example.
 3. Practice Exercise
 Mock exercise."""
 
+MOCK_ANSWER_RESPONSE = """1. Suggested Answer
+Mock suggested answer.
+
+2. Why It Works
+Mock explanation.
+
+3. Common Mistake
+Mock common mistake."""
+
 
 def test_app_shows_missing_api_key_error() -> None:
     """The app should clearly report missing OpenAI configuration."""
@@ -71,3 +80,50 @@ app.main()
 
     assert app.warning[0].value == "Please enter a study topic."
     assert app.session_state["messages"] == []
+
+
+def test_app_answers_previous_exercise() -> None:
+    """Streamlit should retain context and use the answer helper."""
+    app = AppTest.from_string(
+        f'''
+import app
+app.OPENAI_API_KEY = "test-key"
+app.generate_response = lambda topic: {MOCK_RESPONSE!r}
+app.generate_exercise_answer = lambda topic, response: {MOCK_ANSWER_RESPONSE!r}
+app.main()
+'''
+    ).run()
+
+    app.chat_input[0].set_value("SQL joins").run()
+    app.chat_input[0].set_value("done").run()
+
+    assert len(app.chat_message) == 4
+    assert app.chat_message[3].markdown[0].value == MOCK_ANSWER_RESPONSE
+    assert app.session_state["previous_exercise"] == {
+        "topic": "SQL joins",
+        "response": MOCK_RESPONSE,
+    }
+
+
+def test_app_answer_request_without_previous_exercise() -> None:
+    """Streamlit should guide users when no previous exercise exists."""
+    app = AppTest.from_string(
+        """
+import app
+app.OPENAI_API_KEY = "test-key"
+
+def fail_if_called(*args):
+    raise AssertionError("No API helper should be called")
+
+app.generate_response = fail_if_called
+app.generate_exercise_answer = fail_if_called
+app.main()
+"""
+    ).run()
+
+    app.chat_input[0].set_value("show answer").run()
+
+    assert app.chat_message[1].markdown[0].value == (
+        "Please enter a study topic first so Nerdbot can create an exercise."
+    )
+    assert app.session_state["previous_exercise"] is None

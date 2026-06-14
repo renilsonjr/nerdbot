@@ -2,7 +2,12 @@
 
 import streamlit as st
 
-from src.bot import generate_response
+from src.bot import (
+    NO_PREVIOUS_EXERCISE_MESSAGE,
+    generate_exercise_answer,
+    generate_response,
+    is_answer_request,
+)
 from src.config import MISSING_API_KEY_MESSAGE, OPENAI_API_KEY
 
 
@@ -10,6 +15,8 @@ def initialize_chat_history() -> None:
     """Create the session chat history on the first app run."""
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "previous_exercise" not in st.session_state:
+        st.session_state.previous_exercise = None
 
 
 def display_chat_history() -> None:
@@ -54,7 +61,21 @@ def main() -> None:
     try:
         with st.chat_message("assistant"):
             with st.spinner("Connecting the dots..."):
-                response = generate_response(cleaned_topic)
+                if is_answer_request(cleaned_topic):
+                    previous_exercise = st.session_state.previous_exercise
+                    if previous_exercise is None:
+                        response = NO_PREVIOUS_EXERCISE_MESSAGE
+                    else:
+                        response = generate_exercise_answer(
+                            previous_exercise["topic"],
+                            previous_exercise["response"],
+                        )
+                else:
+                    response = generate_response(cleaned_topic)
+                    st.session_state.previous_exercise = {
+                        "topic": cleaned_topic,
+                        "response": response,
+                    }
             st.markdown(response)
     except ValueError as error:
         st.error(f"Configuration error: {error}")

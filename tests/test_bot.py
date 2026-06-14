@@ -8,7 +8,7 @@ import pytest
 import src.bot as bot
 from main import run_chat
 from src.config import MISSING_API_KEY_MESSAGE
-from src.prompts import SYSTEM_PROMPT
+from src.prompts import EXERCISE_ANSWER_PROMPT, SYSTEM_PROMPT
 
 
 MOCK_RESPONSE = """1. Explanation
@@ -20,6 +20,17 @@ A data analyst uses joins to combine customer and order data.
 3. Practice Exercise
 Write a query that joins a Customers table to an Orders table."""
 
+MOCK_ANSWER_RESPONSE = """1. Suggested Answer
+SELECT Customers.name, Orders.id
+FROM Customers
+LEFT JOIN Orders ON Customers.id = Orders.customer_id;
+
+2. Why It Works
+The LEFT JOIN keeps every customer and matches available orders.
+
+3. Common Mistake
+Using an INNER JOIN would remove customers who have no orders."""
+
 
 def test_system_prompt_exists() -> None:
     """The system prompt should exist and define all required blocks."""
@@ -27,6 +38,20 @@ def test_system_prompt_exists() -> None:
     assert "1. Explanation" in SYSTEM_PROMPT
     assert "2. Real-World / Career Example" in SYSTEM_PROMPT
     assert "3. Practice Exercise" in SYSTEM_PROMPT
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    ["done", "Show answer", "answer!", "I finished", "FINISHED"],
+)
+def test_answer_request_detection(user_input: str) -> None:
+    """Common completion phrases should request the previous answer."""
+    assert bot.is_answer_request(user_input)
+
+
+def test_normal_topic_is_not_answer_request() -> None:
+    """A regular study topic should keep the original response flow."""
+    assert not bot.is_answer_request("Python functions")
 
 
 def test_generate_response_returns_three_blocks(
@@ -63,6 +88,59 @@ def test_generate_response_returns_three_blocks(
             {"role": "user", "content": "SQL joins"},
         ],
     )
+
+
+def test_generate_exercise_answer_uses_previous_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The answer helper should send prior exercise context to OpenAI."""
+    create_mock = Mock(
+        return_value=SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(content=MOCK_ANSWER_RESPONSE)
+                )
+            ]
+        )
+    )
+    client_mock = Mock()
+    client_mock.chat.completions.create = create_mock
+    openai_mock = Mock(return_value=client_mock)
+
+    monkeypatch.setattr(bot, "OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(bot, "OpenAI", openai_mock)
+
+    result = bot.generate_exercise_answer("SQL joins", MOCK_RESPONSE)
+
+    assert "1. Suggested Answer" in result
+    assert "2. Why It Works" in result
+    assert "3. Common Mistake" in result
+    create_mock.assert_called_once_with(
+        model=bot.OPENAI_MODEL,
+        messages=[
+            {"role": "system", "content": EXERCISE_ANSWER_PROMPT},
+            {
+                "role": "user",
+                "content": (
+                    "Study topic:\nSQL joins\n\n"
+                    f"Previous Nerdbot response:\n{MOCK_RESPONSE}"
+                ),
+            },
+        ],
+    )
+
+
+def test_generate_exercise_answer_without_context_skips_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An answer request without an exercise should not call OpenAI."""
+    openai_mock = Mock()
+    monkeypatch.setattr(bot, "OpenAI", openai_mock)
+
+    result = bot.generate_exercise_answer("", "")
+
+    assert result == bot.NO_PREVIOUS_EXERCISE_MESSAGE
+    openai_mock.assert_not_called()
 
 
 def test_generate_response_handles_empty_input_without_api_call(
@@ -110,3 +188,24 @@ def test_terminal_loop_handles_empty_input_and_exit(
     assert "Please enter a study topic." in output
     assert "Goodbye." in output
     generate_mock.assert_not_called()
+
+
+def test_terminal_loop_answers_previous_exercise(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The terminal should retain context for an answer request."""
+    topic_mock = Mock(return_value=MOCK_RESPONSE)
+    answer_mock = Mock(return_value=MOCK_ANSWER_RESPONSE)
+    answers = iter(["SQL joins", "done", "exit"])
+
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(answers))
+    monkeypatch.setattr("main.generate_response", topic_mock)
+    monkeypatch.setattr("main.generate_exercise_answer", answer_mock)
+
+    run_chat()
+
+    output = capsys.readouterr().out
+    assert "1. Suggested Answer" in output
+    topic_mock.assert_called_once_with("SQL joins")
+    answer_mock.assert_called_once_with("SQL joins", MOCK_RESPONSE)

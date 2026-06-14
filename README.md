@@ -28,6 +28,7 @@ concept, see its career relevance, and apply it immediately.
 - Returns every answer in a predictable three-block learning format
 - Connects academic concepts to internships, jobs, and portfolio projects
 - Provides a small practice exercise with each explanation
+- Shows a suggested answer when the user finishes an exercise
 - Keeps chat history during a Streamlit session
 - Handles blank input and missing API configuration clearly
 - Uses a configurable OpenAI model
@@ -215,11 +216,27 @@ project.
 A small hands-on task that applies the topic.
 ```
 
+After completing the exercise, enter `done`, `show answer`, `answer`,
+`I finished`, or `finished`. Nerdbot uses the previous exercise and responds
+with:
+
+```text
+1. Suggested Answer
+An example of a correct solution.
+
+2. Why It Works
+A beginner-friendly explanation of the solution.
+
+3. Common Mistake
+A likely mistake and guidance for avoiding it.
+```
+
 ## MVP Limitations
 
 - Requires an internet connection and a valid OpenAI API key
 - Generated answers may be incomplete or inaccurate and should be verified
 - Chat history exists only for the current Streamlit session
+- Exercise context exists only for the current terminal or Streamlit session
 - No saved accounts, persistent study history, or multi-user support
 - No automatic scoring or feedback for completed exercises
 - The three-block format is prompted but not programmatically repaired if a
