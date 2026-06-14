@@ -55,6 +55,7 @@ nerdbot/
 ├── main.py                 # Terminal interface
 ├── pytest.ini
 ├── requirements.txt
+├── screenshots/           # Portfolio screenshots
 ├── src/
 │   ├── __init__.py
 │   ├── bot.py              # OpenAI request and response logic
@@ -129,6 +130,23 @@ streamlit run app.py
 Streamlit will print a local address, normally
 [`http://localhost:8501`](http://localhost:8501), and may open it
 automatically in a browser.
+
+## Screenshots
+
+The following placeholders are reserved for authentic captures of the
+Streamlit app. No generated or simulated screenshots are used.
+
+### Home Screen
+
+![Nerdbot home screen](screenshots/nerdbot-home.png)
+
+### SQL Example
+
+![Nerdbot SQL example](screenshots/nerdbot-sql-example.png)
+
+### Chat History
+
+![Nerdbot chat history](screenshots/nerdbot-chat-history.png)
 
 ## Run Tests
 
