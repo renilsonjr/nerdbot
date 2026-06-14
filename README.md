@@ -1,77 +1,75 @@
-# Nerdbot 🤖
+# Nerdbot
 
-An AI-powered study mentor that connects academic topics to real-world career examples and hands-on practice exercises.
+**Connect what you study to real-world career examples and practice.**
 
----
+Nerdbot is an AI-powered study mentor for students, career changers, and
+early-career developers. Enter a topic and receive a focused lesson through
+either a terminal chatbot or a Streamlit web app.
 
-## What it does
+Every response follows one consistent learning structure:
 
-You type a study topic. Nerdbot always responds with exactly three blocks:
-
-```
 1. Explanation
-   A clear, beginner-friendly explanation of the topic.
-
 2. Real-World / Career Example
-   How this topic appears in a real internship, job, or portfolio project.
-
 3. Practice Exercise
-   A small hands-on task to apply what you just learned.
-```
 
----
+## Problem It Solves
 
-## Who it is for
+Learning resources often explain what a concept means without showing where
+it appears in professional work or how to practice it. That gap can make
+technical subjects feel disconnected from internships, projects, and entry-
+level roles.
 
-- Computer Science, Data Science, IT, and Web Development students
-- Bootcamp students and recent graduates
-- Career changers breaking into tech
-- Anyone preparing for internships or their first tech job
+Nerdbot combines those three learning needs in one response: understand the
+concept, see its career relevance, and apply it immediately.
 
----
+## MVP Features
 
-## Tech stack
+- Accepts any study topic through a terminal or browser interface
+- Returns every answer in a predictable three-block learning format
+- Connects academic concepts to internships, jobs, and portfolio projects
+- Provides a small practice exercise with each explanation
+- Keeps chat history during a Streamlit session
+- Handles blank input and missing API configuration clearly
+- Uses a configurable OpenAI model
+- Includes an eight-test offline suite that mocks OpenAI API calls
 
-| Layer | Technology |
+## Tech Stack
+
+| Area | Technology |
 |---|---|
 | Language | Python 3.11+ |
-| AI API | OpenAI API |
-| Model | Configurable via `.env` (default: `gpt-4o-mini`) |
-| Phase 1 interface | Terminal |
-| Phase 2 interface | Streamlit |
-| Tests | pytest |
-| Version control | Git + GitHub |
+| AI | OpenAI Python SDK |
+| Web interface | Streamlit |
+| Configuration | python-dotenv |
+| Testing | pytest and Streamlit AppTest |
 
----
+## Project Structure
 
-## Project structure
-
-```
+```text
 nerdbot/
-├── .env                  # Your API key and model config (never push this)
-├── .env.example          # Template showing required environment variables
+├── .env.example
 ├── .gitignore
+├── AGENTS.md
 ├── README.md
-├── AGENTS.md             # Instructions for Codex and AI coding agents
+├── app.py                  # Streamlit web interface
+├── main.py                 # Terminal interface
+├── pytest.ini
 ├── requirements.txt
-├── main.py               # Terminal chatbot entry point
-├── app.py                # Streamlit web app entry point
 ├── src/
 │   ├── __init__.py
-│   ├── config.py         # Loads environment variables
-│   ├── prompts.py        # System prompt
-│   └── bot.py            # Core response logic
+│   ├── bot.py              # OpenAI request and response logic
+│   ├── config.py           # Environment configuration
+│   └── prompts.py          # Three-block system prompt
 ├── tests/
-│   └── test_bot.py       # Unit tests (no real API calls)
+│   ├── test_app.py         # Streamlit interface tests
+│   └── test_bot.py         # Bot and terminal tests
 └── docs/
-    ├── product-requirements.md
     ├── build-phases.md
+    ├── product-requirements.md
     └── prompt-design.md
 ```
 
----
-
-## Setup
+## macOS Setup
 
 ### 1. Clone the repository
 
@@ -80,7 +78,7 @@ git clone https://github.com/renilsonjr/nerdbot.git
 cd nerdbot
 ```
 
-### 2. Create and activate virtual environment
+### 2. Create a virtual environment
 
 ```bash
 python3 -m venv venv
@@ -90,110 +88,109 @@ source venv/bin/activate
 ### 3. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+## Environment Configuration
+
+Create a local `.env` file from the included template:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and add your OpenAI API key:
+Open `.env` and provide an OpenAI API key and model:
 
 ```env
 OPENAI_API_KEY=your_key_here
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-Get your API key at: [platform.openai.com](https://platform.openai.com)
+The `.env` file is ignored by Git and must never be committed. An OpenAI API
+key can be created at [platform.openai.com](https://platform.openai.com/).
+API usage may incur charges on the associated OpenAI account.
 
----
+## Run the Terminal Version
 
-## Running the terminal bot
+Activate the virtual environment, then run:
 
 ```bash
 python3 main.py
 ```
 
-Example session:
+Enter a study topic at the prompt. Type `exit` to close Nerdbot.
 
-```
-Welcome to Nerdbot.
-Type a study topic, or type 'exit' to quit.
-
-You: SQL joins
-
-Nerdbot:
-1. Explanation
-SQL joins combine rows from two or more tables using a shared column...
-
-2. Real-World / Career Example
-In a data analyst internship, you may be asked to find customers who
-registered but never made a purchase. This is a LEFT JOIN use case...
-
-3. Practice Exercise
-You have two tables: Customers and Orders.
-Write a query that returns all customers, including those without orders.
-Type "done" when you finish and Nerdbot will show you the answer.
-
-You: exit
-Goodbye.
-```
-
----
-
-## Running the web app
+## Run the Streamlit Version
 
 ```bash
 streamlit run app.py
 ```
 
-Opens Nerdbot in your browser at `localhost:8501`.
+Streamlit will print a local address, normally
+[`http://localhost:8501`](http://localhost:8501), and may open it
+automatically in a browser.
 
----
-
-## Running tests
+## Run Tests
 
 ```bash
 pytest
 ```
 
-Tests verify bot logic using mocked responses — no real API calls needed.
+The tests replace the OpenAI client with mocked responses. Running the test
+suite does not send requests to the real OpenAI API.
 
----
+## Example Topics
 
-## Build phases
+- SQL joins
+- Python list comprehensions
+- REST API fundamentals
+- Git branching
+- Object-oriented programming
+- Data normalization
+- Binary search
+- CSS Flexbox
 
-| Phase | Name | Status |
-|---|---|---|
-| 1 | API Connection | 🔲 |
-| 2 | System Prompt & 3-Block Structure | 🔲 |
-| 3 | Terminal Chat Loop | 🔲 |
-| 4 | Streamlit Web Interface | 🔲 |
-| 5 | Tests | 🔲 |
-| 6 | Portfolio & Deployment | 🔲 |
+## Example Output Format
 
----
+Every successful answer follows exactly this structure:
 
-## Future roadmap
+```text
+1. Explanation
+A clear, beginner-friendly explanation of the topic.
 
-- Book recommendations per topic
-- YouTube / podcast search
-- Portfolio project generator
-- Interview question generator
-- Resume bullet generator
-- User study history
-- Animated mascot character
+2. Real-World / Career Example
+An example of how the topic appears in an internship, job, or portfolio
+project.
 
----
+3. Practice Exercise
+A small hands-on task that applies the topic.
+```
+
+## MVP Limitations
+
+- Requires an internet connection and a valid OpenAI API key
+- Generated answers may be incomplete or inaccurate and should be verified
+- Chat history exists only for the current Streamlit session
+- No saved accounts, persistent study history, or multi-user support
+- No automatic scoring or feedback for completed exercises
+- The three-block format is prompted but not programmatically repaired if a
+  model response violates it
+
+## Future Roadmap
+
+- Deploy the Streamlit app to a public hosting service
+- Add automated response-format validation
+- Add continuous integration for the pytest suite
+- Improve accessibility and responsive presentation
+- Add optional difficulty levels while preserving the three-block format
+- Add exercise follow-up and feedback without persistent user tracking
 
 ## Author
 
 **Renilson Rodrigues (RJ)**
-[github.com/renilsonjr](https://github.com/renilsonjr) · [linkedin.com/in/renilsonjr](https://linkedin.com/in/renilsonjr)
 
----
+[GitHub](https://github.com/renilsonjr) |
+[LinkedIn](https://linkedin.com/in/renilsonjr)
 
 ## License
 
