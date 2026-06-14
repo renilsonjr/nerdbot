@@ -111,6 +111,12 @@ The `.env` file is ignored by Git and must never be committed. An OpenAI API
 key can be created at [platform.openai.com](https://platform.openai.com/).
 API usage may incur charges on the associated OpenAI account.
 
+Configuration is loaded in this order:
+
+1. Environment variables, including values loaded from a local `.env` file
+2. Streamlit Community Cloud secrets
+3. The default model value, when `OPENAI_MODEL` is not configured
+
 ## Run the Terminal Version
 
 Activate the virtual environment, then run:
@@ -130,6 +136,31 @@ streamlit run app.py
 Streamlit will print a local address, normally
 [`http://localhost:8501`](http://localhost:8501), and may open it
 automatically in a browser.
+
+## Deploy to Streamlit Community Cloud
+
+1. Push the project to a GitHub repository. Confirm that `.env` is not
+   committed.
+2. Sign in to
+   [Streamlit Community Cloud](https://share.streamlit.io/).
+3. Create a new app and select the Nerdbot repository and branch.
+4. Set the app entry point to `app.py`.
+5. Open the app's **Advanced settings** or **Secrets** editor.
+6. Add the configuration shown below, replacing the placeholder key.
+7. Save the secrets and deploy the app.
+
+### Streamlit Secrets
+
+Add these values using TOML syntax in the Streamlit secrets editor:
+
+```toml
+OPENAI_API_KEY = "your_key_here"
+OPENAI_MODEL = "gpt-4o-mini"
+```
+
+Do not paste a real API key into `README.md`, source code, GitHub, deployment
+logs, or screenshots. Streamlit makes these values available to the deployed
+app through `st.secrets`; Nerdbot does not display their contents.
 
 ## Screenshots
 
