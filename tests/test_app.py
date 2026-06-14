@@ -2,6 +2,8 @@
 
 from streamlit.testing.v1 import AppTest
 
+from src.config import MISSING_API_KEY_MESSAGE
+
 
 MOCK_RESPONSE = """1. Explanation
 Mock explanation.
@@ -24,7 +26,7 @@ app.main()
     ).run()
 
     assert app.title[0].value == "Nerdbot"
-    assert "OPENAI_API_KEY is missing" in app.error[0].value
+    assert app.error[0].value == MISSING_API_KEY_MESSAGE
     assert app.chat_input[0].disabled
 
 

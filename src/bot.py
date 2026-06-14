@@ -2,7 +2,11 @@
 
 from openai import OpenAI
 
-from src.config import OPENAI_API_KEY, OPENAI_MODEL
+from src.config import (
+    MISSING_API_KEY_MESSAGE,
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
+)
 from src.prompts import SYSTEM_PROMPT
 
 
@@ -13,9 +17,7 @@ def generate_response(topic: str) -> str:
         return "Please enter a study topic."
 
     if not OPENAI_API_KEY:
-        raise ValueError(
-            "OPENAI_API_KEY is missing. Add it to your .env file and try again."
-        )
+        raise ValueError(MISSING_API_KEY_MESSAGE)
 
     client = OpenAI(api_key=OPENAI_API_KEY)
     response = client.chat.completions.create(

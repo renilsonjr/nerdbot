@@ -3,7 +3,7 @@
 import streamlit as st
 
 from src.bot import generate_response
-from src.config import OPENAI_API_KEY
+from src.config import MISSING_API_KEY_MESSAGE, OPENAI_API_KEY
 
 
 def initialize_chat_history() -> None:
@@ -31,10 +31,7 @@ def main() -> None:
     display_chat_history()
 
     if not OPENAI_API_KEY:
-        st.error(
-            "OPENAI_API_KEY is missing. Add it to your .env file and "
-            "restart the app."
-        )
+        st.error(MISSING_API_KEY_MESSAGE)
 
     topic = st.chat_input(
         "Enter a study topic",

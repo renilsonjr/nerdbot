@@ -7,6 +7,7 @@ import pytest
 
 import src.bot as bot
 from main import run_chat
+from src.config import MISSING_API_KEY_MESSAGE
 from src.prompts import SYSTEM_PROMPT
 
 
@@ -85,9 +86,10 @@ def test_generate_response_requires_api_key(
     monkeypatch.setattr(bot, "OPENAI_API_KEY", None)
     monkeypatch.setattr(bot, "OpenAI", openai_mock)
 
-    with pytest.raises(ValueError, match="OPENAI_API_KEY is missing"):
+    with pytest.raises(ValueError) as error:
         bot.generate_response("Python lists")
 
+    assert str(error.value) == MISSING_API_KEY_MESSAGE
     openai_mock.assert_not_called()
 
 

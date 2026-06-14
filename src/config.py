@@ -7,6 +7,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+MISSING_API_KEY_MESSAGE = (
+    "OPENAI_API_KEY is missing. Add it to Streamlit Secrets for deployment "
+    "or to your local .env file for local development."
+)
+
 
 def get_streamlit_secret(name: str) -> str | None:
     """Return a Streamlit secret when running inside Streamlit."""
