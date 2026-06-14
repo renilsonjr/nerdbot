@@ -1,22 +1,35 @@
-from openai import OpenAI
-from dotenv import load_dotenv
-import os
+"""Terminal interface for Nerdbot."""
 
-load_dotenv()
+from src.bot import generate_response
 
-api_key = os.getenv("OPENAI_API_KEY")
-model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
-if not api_key:
-    raise ValueError("OPENAI_API_KEY is missing. Check your .env file.")
+def run_chat() -> None:
+    """Run the interactive terminal chat until the user exits."""
+    print("Welcome to Nerdbot.")
+    print("Type a study topic, or type 'exit' to quit.")
 
-client = OpenAI(api_key=api_key)
+    while True:
+        topic = input("\nYou: ").strip()
 
-response = client.chat.completions.create(
-    model=model,
-    messages=[
-        {"role": "user", "content": "Say: Nerdbot API connection is working."}
-    ],
-)
+        if topic.lower() == "exit":
+            print("Goodbye.")
+            return
 
-print(response.choices[0].message.content)
+        if not topic:
+            print("Please enter a study topic.")
+            continue
+
+        try:
+            response = generate_response(topic)
+        except ValueError as error:
+            print(f"Configuration error: {error}")
+            return
+        except Exception as error:
+            print(f"Nerdbot could not generate a response: {error}")
+            continue
+
+        print(f"\nNerdbot:\n{response}")
+
+
+if __name__ == "__main__":
+    run_chat()
