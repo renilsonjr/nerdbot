@@ -29,6 +29,7 @@ concept, see its career relevance, and apply it immediately.
 - Connects academic concepts to internships, jobs, and portfolio projects
 - Provides a small practice exercise with each explanation
 - Shows a suggested answer when the user finishes an exercise
+- Recommends curated beginner resources without web search
 - Keeps chat history during a Streamlit session
 - Handles blank input and missing API configuration clearly
 - Uses a configurable OpenAI model
@@ -230,6 +231,23 @@ A beginner-friendly explanation of the solution.
 3. Common Mistake
 A likely mistake and guidance for avoiding it.
 ```
+
+Ask for a book, course, article, video, resource, or recommendation to receive
+an offline recommendation from Nerdbot's curated catalog:
+
+```text
+1. Recommended Resource
+A beginner-friendly resource and its link.
+
+2. Why It Fits
+Why the resource matches the requested topic.
+
+3. Practice Task
+A small task to complete while using the resource.
+```
+
+The catalog currently covers Python, SQL, HTML/CSS, JavaScript, APIs, data
+analysis, and cybersecurity basics. Resource requests do not use web search.
 
 ## MVP Limitations
 

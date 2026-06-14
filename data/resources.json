@@ -1,0 +1,65 @@
+[
+  {
+    "topic": "Python",
+    "aliases": ["python", "python programming"],
+    "resource": "Automate the Boring Stuff with Python",
+    "type": "Free online book",
+    "url": "https://automatetheboringstuff.com/",
+    "why": "It teaches Python through practical automation projects and assumes no prior programming experience.",
+    "practice_task": "Read the first chapter, then write a short script that asks for a name and prints a personalized greeting."
+  },
+  {
+    "topic": "SQL",
+    "aliases": ["sql", "database query", "database queries"],
+    "resource": "SQLBolt",
+    "type": "Interactive course",
+    "url": "https://sqlbolt.com/",
+    "why": "Its short lessons pair each SQL concept with an exercise that runs directly in the browser.",
+    "practice_task": "Complete the SELECT queries lesson, then write a query that returns two columns and filters the rows."
+  },
+  {
+    "topic": "HTML/CSS",
+    "aliases": ["html", "css", "html/css", "web styling", "web page"],
+    "resource": "MDN Learn Web Development",
+    "type": "Learning path",
+    "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development",
+    "why": "MDN explains web fundamentals with structured beginner modules and standards-based examples.",
+    "practice_task": "Build a one-page profile with semantic HTML, then style its spacing, colors, and typography with CSS."
+  },
+  {
+    "topic": "JavaScript",
+    "aliases": ["javascript", "js"],
+    "resource": "MDN JavaScript Guide",
+    "type": "Technical guide",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide",
+    "why": "It provides a dependable introduction to JavaScript syntax and core language concepts with examples.",
+    "practice_task": "Read the grammar and types section, then create variables for a product and calculate its discounted price."
+  },
+  {
+    "topic": "APIs",
+    "aliases": ["api", "apis", "rest api", "restful api", "fetch api"],
+    "resource": "MDN Using the Fetch API",
+    "type": "Tutorial",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch",
+    "why": "It demonstrates how browser applications send requests, read responses, and handle common API errors.",
+    "practice_task": "Fetch data from a public practice endpoint and print one returned item to the browser console."
+  },
+  {
+    "topic": "Data analysis",
+    "aliases": ["data analysis", "data analytics", "pandas", "dataframe"],
+    "resource": "10 Minutes to pandas",
+    "type": "Official tutorial",
+    "url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+    "why": "It introduces the essential pandas operations used to inspect, clean, select, and summarize tabular data.",
+    "practice_task": "Create a small DataFrame, select one column, filter its rows, and calculate a numeric column's average."
+  },
+  {
+    "topic": "Cybersecurity basics",
+    "aliases": ["cybersecurity", "cyber security", "security basics", "online security"],
+    "resource": "CISA Secure Our World",
+    "type": "Beginner guidance",
+    "url": "https://www.cisa.gov/secure-our-world",
+    "why": "It focuses on practical security habits such as strong passwords, multifactor authentication, updates, and phishing awareness.",
+    "practice_task": "Audit one account by enabling multifactor authentication and checking whether its password is unique."
+  }
+]

@@ -5,8 +5,10 @@ import streamlit as st
 from src.bot import (
     NO_PREVIOUS_EXERCISE_MESSAGE,
     generate_exercise_answer,
+    generate_resource_response,
     generate_response,
     is_answer_request,
+    is_resource_request,
 )
 from src.config import MISSING_API_KEY_MESSAGE, OPENAI_API_KEY
 
@@ -70,6 +72,17 @@ def main() -> None:
                             previous_exercise["topic"],
                             previous_exercise["response"],
                         )
+                elif is_resource_request(cleaned_topic):
+                    previous_exercise = st.session_state.previous_exercise
+                    previous_topic = (
+                        previous_exercise["topic"]
+                        if previous_exercise is not None
+                        else ""
+                    )
+                    response = generate_resource_response(
+                        cleaned_topic,
+                        previous_topic,
+                    )
                 else:
                     response = generate_response(cleaned_topic)
                     st.session_state.previous_exercise = {

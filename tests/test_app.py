@@ -23,6 +23,15 @@ Mock explanation.
 3. Common Mistake
 Mock common mistake."""
 
+MOCK_RESOURCE_RESPONSE = """1. Recommended Resource
+SQLBolt
+
+2. Why It Fits
+Interactive SQL practice.
+
+3. Practice Task
+Complete one lesson."""
+
 
 def test_app_shows_missing_api_key_error() -> None:
     """The app should clearly report missing OpenAI configuration."""
@@ -127,3 +136,25 @@ app.main()
         "Please enter a study topic first so Nerdbot can create an exercise."
     )
     assert app.session_state["previous_exercise"] is None
+
+
+def test_app_routes_resource_request_without_changing_exercise_context() -> None:
+    """Streamlit should use curated resources and preserve prior context."""
+    app = AppTest.from_string(
+        f'''
+import app
+app.OPENAI_API_KEY = "test-key"
+app.generate_response = lambda topic: {MOCK_RESPONSE!r}
+app.generate_resource_response = lambda request, topic: {MOCK_RESOURCE_RESPONSE!r}
+app.main()
+'''
+    ).run()
+
+    app.chat_input[0].set_value("SQL joins").run()
+    app.chat_input[0].set_value("Recommend a book").run()
+
+    assert app.chat_message[3].markdown[0].value == MOCK_RESOURCE_RESPONSE
+    assert app.session_state["previous_exercise"] == {
+        "topic": "SQL joins",
+        "response": MOCK_RESPONSE,
+    }

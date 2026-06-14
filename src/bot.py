@@ -1,6 +1,9 @@
 """Core OpenAI response generation for Nerdbot."""
 
+import json
 import re
+from pathlib import Path
+from typing import Any
 
 from openai import OpenAI
 
@@ -22,6 +25,23 @@ ANSWER_REQUEST_PHRASES = {
     "i finished",
     "show answer",
 }
+RESOURCE_REQUEST_TERMS = {
+    "article",
+    "articles",
+    "book",
+    "books",
+    "course",
+    "courses",
+    "recommend",
+    "recommendations",
+    "recommendation",
+    "resource",
+    "resources",
+    "suggest",
+    "video",
+    "videos",
+}
+RESOURCES_PATH = Path(__file__).resolve().parent.parent / "data" / "resources.json"
 
 
 def is_answer_request(user_input: str) -> bool:
@@ -29,6 +49,68 @@ def is_answer_request(user_input: str) -> bool:
     normalized_input = re.sub(r"[^\w\s]", "", user_input.lower())
     normalized_input = " ".join(normalized_input.split())
     return normalized_input in ANSWER_REQUEST_PHRASES
+
+
+def is_resource_request(user_input: str) -> bool:
+    """Return whether the input asks for a learning resource."""
+    normalized_input = re.sub(r"[^\w\s]", " ", user_input.lower())
+    words = set(normalized_input.split())
+    return bool(words & RESOURCE_REQUEST_TERMS)
+
+
+def _load_resources() -> list[dict[str, Any]]:
+    """Load the curated resource catalog from disk."""
+    with RESOURCES_PATH.open(encoding="utf-8") as resources_file:
+        return json.load(resources_file)
+
+
+def _find_resource(
+    request: str,
+    previous_topic: str = "",
+) -> dict[str, Any] | None:
+    """Find a curated resource using the request or previous topic."""
+    resources = _load_resources()
+    for searchable_text in (request.lower(), previous_topic.lower()):
+        if not searchable_text:
+            continue
+        for resource in resources:
+            aliases = resource.get("aliases", [])
+            if any(
+                re.search(rf"\b{re.escape(alias.lower())}\b", searchable_text)
+                for alias in aliases
+            ):
+                return resource
+    return None
+
+
+def generate_resource_response(
+    request: str,
+    previous_topic: str = "",
+) -> str:
+    """Return a three-block recommendation from the curated catalog."""
+    resource = _find_resource(request, previous_topic)
+    if resource is None:
+        return (
+            "1. Recommended Resource\n"
+            "Tell me which topic you want a resource for: Python, SQL, "
+            "HTML/CSS, JavaScript, APIs, data analysis, or cybersecurity "
+            "basics.\n\n"
+            "2. Why It Fits\n"
+            "Knowing the topic lets Nerdbot choose a focused, "
+            "beginner-friendly resource from its curated catalog.\n\n"
+            "3. Practice Task\n"
+            "Choose one topic from the list and ask for a book, course, "
+            "video, article, or resource."
+        )
+
+    return (
+        "1. Recommended Resource\n"
+        f"{resource['resource']} ({resource['type']}): {resource['url']}\n\n"
+        "2. Why It Fits\n"
+        f"{resource['why']}\n\n"
+        "3. Practice Task\n"
+        f"{resource['practice_task']}"
+    )
 
 
 def _create_completion(system_prompt: str, user_content: str) -> str:

@@ -21,6 +21,13 @@ exactly 3 different blocks:
 2. Why It Works
 3. Common Mistake
 
+When the user asks for a learning resource, the bot uses the curated local
+catalog and responds in exactly:
+
+1. Recommended Resource
+2. Why It Fits
+3. Practice Task
+
 These fixed structures are core product decisions. Do not change them.
 
 ---
@@ -56,6 +63,7 @@ Always load them using `os.getenv()` via `src/config.py`.
 | File | Purpose |
 |---|---|
 | `src/config.py` | Loads and exposes environment variables |
+| `data/resources.json` | Curated beginner learning resources |
 | `src/prompts.py` | Contains the topic and exercise-answer prompts |
 | `src/bot.py` | Contains shared detection and response generation |
 | `main.py` | Terminal chat loop — imports from `src/` only |
@@ -125,6 +133,14 @@ Required exercise-answer heading strings:
 3. Common Mistake
 ```
 
+Required resource heading strings:
+
+```text
+1. Recommended Resource
+2. Why It Fits
+3. Practice Task
+```
+
 Do not create interface-specific prompts. Both `main.py` and `app.py` must use
 the shared detection and generation helpers from `src/bot.py`.
 
@@ -137,7 +153,7 @@ Do not add any of the following unless explicitly instructed:
 - Database or ORM
 - User authentication or login
 - Web search or YouTube search
-- Book recommendation engine
+- Uncurated or web-powered recommendation engine
 - Vector database (ChromaDB, pgvector)
 - FastAPI or any REST API layer
 - Payments or subscriptions
@@ -157,6 +173,7 @@ The following features are implemented and should remain working:
 - Streamlit chat in `app.py` with session history
 - Clear missing-key errors in both interfaces
 - Offline bot, terminal, and Streamlit tests
+- Offline curated resource recommendations without web search
 
 Keep interface code thin. Shared response behavior belongs in `src/bot.py`;
 configuration belongs in `src/config.py`; prompt rules belong in
@@ -195,6 +212,7 @@ At minimum, tests must continue to verify:
 - `generate_response()` returns a string with all three headings
 - Terminal exit behavior works without an API call
 - Streamlit chat history renders with a mocked response
+- Resource requests use curated data without calling OpenAI or web search
 
 ---
 

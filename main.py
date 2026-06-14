@@ -3,8 +3,10 @@
 from src.bot import (
     NO_PREVIOUS_EXERCISE_MESSAGE,
     generate_exercise_answer,
+    generate_resource_response,
     generate_response,
     is_answer_request,
+    is_resource_request,
 )
 
 
@@ -34,6 +36,13 @@ def run_chat() -> None:
                         previous_exercise["topic"],
                         previous_exercise["response"],
                     )
+            elif is_resource_request(topic):
+                previous_topic = (
+                    previous_exercise["topic"]
+                    if previous_exercise is not None
+                    else ""
+                )
+                response = generate_resource_response(topic, previous_topic)
             else:
                 response = generate_response(topic)
                 previous_exercise = {
