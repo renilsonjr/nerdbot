@@ -1,0 +1,75 @@
+"""Streamlit web interface for Nerdbot."""
+
+import streamlit as st
+
+from src.bot import generate_response
+from src.config import OPENAI_API_KEY
+
+
+def initialize_chat_history() -> None:
+    """Create the session chat history on the first app run."""
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+
+def display_chat_history() -> None:
+    """Render all saved user and assistant messages."""
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+
+def main() -> None:
+    """Render the Nerdbot Streamlit application."""
+    st.set_page_config(page_title="Nerdbot")
+    st.title("Nerdbot")
+    st.write(
+        "Connect what you study to real-world career examples and practice."
+    )
+
+    initialize_chat_history()
+    display_chat_history()
+
+    if not OPENAI_API_KEY:
+        st.error(
+            "OPENAI_API_KEY is missing. Add it to your .env file and "
+            "restart the app."
+        )
+
+    topic = st.chat_input(
+        "Enter a study topic",
+        disabled=not OPENAI_API_KEY,
+    )
+    if topic is None:
+        return
+
+    cleaned_topic = topic.strip()
+    if not cleaned_topic:
+        st.warning("Please enter a study topic.")
+        return
+
+    st.session_state.messages.append(
+        {"role": "user", "content": cleaned_topic}
+    )
+    with st.chat_message("user"):
+        st.markdown(cleaned_topic)
+
+    try:
+        with st.chat_message("assistant"):
+            with st.spinner("Connecting the dots..."):
+                response = generate_response(cleaned_topic)
+            st.markdown(response)
+    except ValueError as error:
+        st.error(f"Configuration error: {error}")
+        return
+    except Exception as error:
+        st.error(f"Nerdbot could not generate a response: {error}")
+        return
+
+    st.session_state.messages.append(
+        {"role": "assistant", "content": response}
+    )
+
+
+if __name__ == "__main__":
+    main()
