@@ -187,6 +187,9 @@ configuration belongs in `src/config.py`; prompt rules belong in
 - Add a short docstring to every function
 - Keep functions small — one responsibility per function
 - Do not print debug output in `src/` files — only in `main.py` and `app.py`
+- Never display raw exception text from OpenAI or other dependencies
+- Validate user input before storing it or sending it to the OpenAI API
+- Never log or render API keys, Streamlit secrets, or environment contents
 
 ---
 

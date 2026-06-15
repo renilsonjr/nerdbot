@@ -3,12 +3,15 @@
 import streamlit as st
 
 from src.bot import (
+    GENERATION_ERROR_MESSAGE,
+    MissingAPIKeyError,
     NO_PREVIOUS_EXERCISE_MESSAGE,
     generate_exercise_answer,
     generate_resource_response,
     generate_response,
     is_answer_request,
     is_resource_request,
+    validate_user_input,
 )
 from src.config import MISSING_API_KEY_MESSAGE, OPENAI_API_KEY
 
@@ -63,10 +66,11 @@ def main() -> None:
     if topic is None:
         return
 
-    cleaned_topic = topic.strip()
-    if not cleaned_topic:
-        st.warning("Please enter a study topic.")
+    validation_error = validate_user_input(topic)
+    if validation_error:
+        st.warning(validation_error)
         return
+    cleaned_topic = topic.strip()
 
     st.session_state.messages.append(
         {"role": "user", "content": cleaned_topic}
@@ -104,11 +108,11 @@ def main() -> None:
                         "response": response,
                     }
             st.markdown(response)
-    except ValueError as error:
+    except MissingAPIKeyError as error:
         st.error(f"Configuration error: {error}")
         return
-    except Exception as error:
-        st.error(f"Nerdbot could not generate a response: {error}")
+    except Exception:
+        st.error(GENERATION_ERROR_MESSAGE)
         return
 
     st.session_state.messages.append(

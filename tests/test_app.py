@@ -2,6 +2,7 @@
 
 from streamlit.testing.v1 import AppTest
 
+from src.bot import GENERATION_ERROR_MESSAGE, INPUT_TOO_LONG_MESSAGE
 from src.config import MISSING_API_KEY_MESSAGE
 
 
@@ -95,6 +96,51 @@ app.main()
 
     assert app.warning[0].value == "Please enter a study topic."
     assert app.session_state["messages"] == []
+
+
+def test_app_rejects_long_input_without_generating_response() -> None:
+    """Oversized input should not be stored or sent to a response helper."""
+    app = AppTest.from_string(
+        """
+import app
+app.OPENAI_API_KEY = "test-key"
+
+def fail_if_called(*args):
+    raise AssertionError("No response helper should be called")
+
+app.generate_response = fail_if_called
+app.generate_exercise_answer = fail_if_called
+app.generate_resource_response = fail_if_called
+app.main()
+"""
+    ).run()
+
+    app.chat_input[0].set_value("x" * 4001).run()
+
+    assert app.warning[0].value == INPUT_TOO_LONG_MESSAGE
+    assert app.session_state["messages"] == []
+
+
+def test_app_hides_internal_error_details() -> None:
+    """Unexpected failures should display only the generic safe message."""
+    app = AppTest.from_string(
+        """
+import app
+app.OPENAI_API_KEY = "test-key"
+
+def raise_internal_error(topic):
+    raise RuntimeError("secret-data from /internal/path")
+
+app.generate_response = raise_internal_error
+app.main()
+"""
+    ).run()
+
+    app.chat_input[0].set_value("SQL joins").run()
+
+    assert app.error[0].value == GENERATION_ERROR_MESSAGE
+    assert "secret-data" not in app.error[0].value
+    assert "/internal/path" not in app.error[0].value
 
 
 def test_app_answers_previous_exercise() -> None:

@@ -18,6 +18,13 @@ from src.prompts import EXERCISE_ANSWER_PROMPT, SYSTEM_PROMPT
 NO_PREVIOUS_EXERCISE_MESSAGE = (
     "Please enter a study topic first so Nerdbot can create an exercise."
 )
+MAX_USER_INPUT_LENGTH = 4000
+INPUT_TOO_LONG_MESSAGE = (
+    f"Please keep your message under {MAX_USER_INPUT_LENGTH} characters."
+)
+GENERATION_ERROR_MESSAGE = (
+    "Nerdbot could not generate a response. Please try again."
+)
 ANSWER_REQUEST_PHRASES = {
     "answer",
     "done",
@@ -44,11 +51,24 @@ RESOURCE_REQUEST_TERMS = {
 RESOURCES_PATH = Path(__file__).resolve().parent.parent / "data" / "resources.json"
 
 
+class MissingAPIKeyError(ValueError):
+    """Raised when no OpenAI API key is configured."""
+
+
 def is_answer_request(user_input: str) -> bool:
     """Return whether the input asks for the previous exercise answer."""
     normalized_input = re.sub(r"[^\w\s]", "", user_input.lower())
     normalized_input = " ".join(normalized_input.split())
     return normalized_input in ANSWER_REQUEST_PHRASES
+
+
+def validate_user_input(user_input: str) -> str | None:
+    """Return a user-facing validation error, if any."""
+    if not user_input.strip():
+        return "Please enter a study topic."
+    if len(user_input) > MAX_USER_INPUT_LENGTH:
+        return INPUT_TOO_LONG_MESSAGE
+    return None
 
 
 def is_resource_request(user_input: str) -> bool:
@@ -116,7 +136,7 @@ def generate_resource_response(
 def _create_completion(system_prompt: str, user_content: str) -> str:
     """Call OpenAI and return a non-empty response string."""
     if not OPENAI_API_KEY:
-        raise ValueError(MISSING_API_KEY_MESSAGE)
+        raise MissingAPIKeyError(MISSING_API_KEY_MESSAGE)
 
     client = OpenAI(api_key=OPENAI_API_KEY)
     response = client.chat.completions.create(
@@ -136,11 +156,11 @@ def _create_completion(system_prompt: str, user_content: str) -> str:
 
 def generate_response(topic: str) -> str:
     """Return Nerdbot's three-block study response for a topic."""
-    cleaned_topic = topic.strip()
-    if not cleaned_topic:
-        return "Please enter a study topic."
+    validation_error = validate_user_input(topic)
+    if validation_error:
+        return validation_error
 
-    return _create_completion(SYSTEM_PROMPT, cleaned_topic)
+    return _create_completion(SYSTEM_PROMPT, topic.strip())
 
 
 def generate_exercise_answer(

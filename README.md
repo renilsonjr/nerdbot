@@ -269,6 +269,7 @@ analysis, and cybersecurity basics. Resource requests do not use web search.
 ## MVP Limitations
 
 - Requires an internet connection and a valid OpenAI API key
+- Messages are limited to 4,000 characters to control request size
 - Generated answers may be incomplete or inaccurate and should be verified
 - Chat history exists only for the current Streamlit session
 - Exercise context exists only for the current terminal or Streamlit session

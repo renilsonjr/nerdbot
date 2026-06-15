@@ -1,12 +1,15 @@
 """Terminal interface for Nerdbot."""
 
 from src.bot import (
+    GENERATION_ERROR_MESSAGE,
+    MissingAPIKeyError,
     NO_PREVIOUS_EXERCISE_MESSAGE,
     generate_exercise_answer,
     generate_resource_response,
     generate_response,
     is_answer_request,
     is_resource_request,
+    validate_user_input,
 )
 
 
@@ -23,8 +26,9 @@ def run_chat() -> None:
             print("Goodbye.")
             return
 
-        if not topic:
-            print("Please enter a study topic.")
+        validation_error = validate_user_input(topic)
+        if validation_error:
+            print(validation_error)
             continue
 
         try:
@@ -49,11 +53,11 @@ def run_chat() -> None:
                     "topic": topic,
                     "response": response,
                 }
-        except ValueError as error:
+        except MissingAPIKeyError as error:
             print(f"Configuration error: {error}")
             return
-        except Exception as error:
-            print(f"Nerdbot could not generate a response: {error}")
+        except Exception:
+            print(GENERATION_ERROR_MESSAGE)
             continue
 
         print(f"\nNerdbot:\n{response}")

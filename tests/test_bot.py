@@ -227,6 +227,19 @@ def test_generate_response_handles_empty_input_without_api_call(
     openai_mock.assert_not_called()
 
 
+def test_generate_response_rejects_long_input_without_api_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Oversized topics should be rejected before creating an API client."""
+    openai_mock = Mock()
+    monkeypatch.setattr(bot, "OpenAI", openai_mock)
+
+    result = bot.generate_response("x" * (bot.MAX_USER_INPUT_LENGTH + 1))
+
+    assert result == bot.INPUT_TOO_LONG_MESSAGE
+    openai_mock.assert_not_called()
+
+
 def test_generate_response_requires_api_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -306,3 +319,26 @@ def test_terminal_loop_routes_resource_request(
     assert "1. Recommended Resource" in output
     resource_mock.assert_called_once_with("Recommend a SQL course", "")
     topic_mock.assert_not_called()
+
+
+def test_terminal_loop_hides_internal_error_details(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Unexpected failures should not expose upstream error details."""
+    answers = iter(["SQL joins", "exit"])
+    generate_mock = Mock(
+        side_effect=RuntimeError(
+            "upstream response included /internal/path and secret-data"
+        )
+    )
+
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(answers))
+    monkeypatch.setattr("main.generate_response", generate_mock)
+
+    run_chat()
+
+    output = capsys.readouterr().out
+    assert bot.GENERATION_ERROR_MESSAGE in output
+    assert "/internal/path" not in output
+    assert "secret-data" not in output
