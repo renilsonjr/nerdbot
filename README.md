@@ -11,6 +11,7 @@ Nerdbot supports three focused response modes:
 1. Study a topic
 2. Review a practice exercise answer
 3. Find a curated learning resource
+4. Something else
 
 ## Problem It Solves
 
