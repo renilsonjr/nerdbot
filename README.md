@@ -1,4 +1,4 @@
-# Nerdbot Seu assistente de estudos em CS e carreira de trabalho
+# Nerdbot
 
 **Connect what you study to real-world career examples and practice.**
 
