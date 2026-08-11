@@ -32,6 +32,7 @@ concept, see its career relevance, and apply it immediately.
 - Recommends curated beginner resources without web search
 - Keeps chat history during a Streamlit session
 - Handles blank input and missing API configuration clearly
+- Rate limits requests per session and app-wide to protect the API budget
 - Uses a configurable OpenAI model
 - Includes an offline test suite that mocks OpenAI API calls
 
@@ -64,10 +65,14 @@ nerdbot/
 │   ├── __init__.py
 │   ├── bot.py              # OpenAI request and response logic
 │   ├── config.py           # Environment configuration
-│   └── prompts.py          # Three-block system prompt
+│   ├── prompts.py          # Three-block system prompt
+│   └── ratelimit.py        # Request rate limiting
 ├── tests/
+│   ├── conftest.py         # Shared fixtures
 │   ├── test_app.py         # Streamlit interface tests
-│   └── test_bot.py         # Bot and terminal tests
+│   ├── test_bot.py         # Bot and terminal tests
+│   ├── test_config.py      # Configuration loading tests
+│   └── test_ratelimit.py   # Rate limiting tests
 └── docs/
     ├── build-phases.md
     ├── product-requirements.md
@@ -140,6 +145,39 @@ streamlit run app.py
 Streamlit will print a local address, normally
 [`http://localhost:8501`](http://localhost:8501), and may open it
 automatically in a browser.
+
+## Rate Limiting
+
+The deployed app calls OpenAI with **your** API key, so every visitor spends
+your budget. Nerdbot caps that spend at two levels:
+
+| Setting | Default | Limits |
+|---|---|---|
+| `RATE_LIMIT_COOLDOWN_SECONDS` | `3` | Seconds a visitor must wait between questions |
+| `RATE_LIMIT_SESSION_PER_HOUR` | `30` | Questions per browser session, per hour |
+| `RATE_LIMIT_GLOBAL_PER_HOUR` | `250` | Questions across all visitors, per hour |
+| `RATE_LIMIT_GLOBAL_PER_DAY` | `1000` | Questions across all visitors, per day |
+
+Set these like any other configuration value: in `.env` locally, or in the
+Streamlit secrets editor when deployed. A value that is missing, unparseable,
+or not positive falls back to the default, so a typo can never remove the
+ceiling.
+
+The session limits alone would be easy to bypass by opening a new browser
+session, which is why the deployment-wide limits exist. Curated resource
+recommendations are served from local data and make no API call, so they are
+not rate limited. The terminal version is not rate limited either, since it
+runs locally against the operator's own key.
+
+**Choosing values.** Multiply the global daily limit by your model's cost per
+request to get a worst-case daily spend, then set the limit to whatever you
+are willing to lose in a day. Treat it as a safety net rather than a billing
+control, and also set a hard spend cap in the OpenAI dashboard.
+
+**Limitation.** Counters are held in memory in the app process. They reset if
+the app restarts or is replicated, so this is a ceiling against casual abuse
+and runaway loops, not an exact ledger. A deployment needing strict guarantees
+would have to track usage in an external store such as Redis.
 
 ## Deploy to Streamlit Community Cloud
 

@@ -1,9 +1,11 @@
 """Tests for the Nerdbot Streamlit interface."""
 
+import pytest
 from streamlit.testing.v1 import AppTest
 
 from src.bot import GENERATION_ERROR_MESSAGE, INPUT_TOO_LONG_MESSAGE
 from src.config import MISSING_API_KEY_MESSAGE
+from src.ratelimit import RateLimitDecision, build_global_limiter
 
 
 MOCK_RESPONSE = """1. Explanation
@@ -143,8 +145,17 @@ app.main()
     assert "/internal/path" not in app.error[0].value
 
 
-def test_app_answers_previous_exercise() -> None:
+def test_app_answers_previous_exercise(monkeypatch: pytest.MonkeyPatch) -> None:
     """Streamlit should retain context and use the answer helper."""
+    # AppTest submits both messages within milliseconds, which the per-session
+    # cooldown would reject. A real user spends far longer than the cooldown
+    # working the exercise before typing "done", so bypass the limiter to test
+    # the answer flow itself. Patching via monkeypatch rather than inside the
+    # app script keeps the override from leaking into later tests.
+    monkeypatch.setattr(
+        "app.check_rate_limits",
+        lambda: RateLimitDecision(allowed=True),
+    )
     app = AppTest.from_string(
         f'''
 import app
@@ -188,6 +199,113 @@ app.main()
         "Please enter a study topic first so Nerdbot can create an exercise."
     )
     assert app.session_state["previous_exercise"] is None
+
+
+def test_app_blocks_rapid_requests_without_calling_openai() -> None:
+    """A throttled request must never reach the OpenAI-backed helper.
+
+    This is the control that stops a visitor from spending the operator's
+    API budget in a loop, so it asserts on the helper never being called
+    rather than only on the warning being shown.
+    """
+    app = AppTest.from_string(
+        f'''
+import app
+app.OPENAI_API_KEY = "test-key"
+
+calls = []
+
+def counted_response(topic):
+    calls.append(topic)
+    return {MOCK_RESPONSE!r}
+
+app.generate_response = counted_response
+app.calls = calls
+app.main()
+'''
+    ).run()
+
+    app.chat_input[0].set_value("SQL joins").run()
+    app.chat_input[0].set_value("Python decorators").run()
+
+    assert app.session_state["messages"][-1]["content"].startswith(
+        "You're sending messages a little too quickly."
+    )
+    assert len(app.warning) == 1
+    assert app.session_state["messages"][1]["content"] == MOCK_RESPONSE
+
+
+def test_app_allows_the_first_request_through() -> None:
+    """Rate limiting must not block a visitor's opening question."""
+    app = AppTest.from_string(
+        f'''
+import app
+app.OPENAI_API_KEY = "test-key"
+app.generate_response = lambda topic: {MOCK_RESPONSE!r}
+app.main()
+'''
+    ).run()
+
+    app.chat_input[0].set_value("SQL joins").run()
+
+    assert app.session_state["messages"][-1]["content"] == MOCK_RESPONSE
+    assert not app.warning
+
+
+def test_global_limit_is_shared_across_sessions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One visitor exhausting the app-wide budget should block the next.
+
+    Each AppTest is a separate session with its own per-session limiter, so a
+    block here can only come from the shared deployment-wide limiter. This is
+    what stops someone from bypassing limits by opening new sessions.
+    """
+    shared_limiter = build_global_limiter(
+        max_requests_per_hour=1,
+        max_requests_per_day=1,
+    )
+    monkeypatch.setattr("app.get_global_limiter", lambda: shared_limiter)
+
+    source = f'''
+import app
+app.OPENAI_API_KEY = "test-key"
+app.generate_response = lambda topic: {MOCK_RESPONSE!r}
+app.main()
+'''
+
+    first_visitor = AppTest.from_string(source).run()
+    first_visitor.chat_input[0].set_value("SQL joins").run()
+
+    second_visitor = AppTest.from_string(source).run()
+    second_visitor.chat_input[0].set_value("Python decorators").run()
+
+    assert first_visitor.session_state["messages"][-1]["content"] == (
+        MOCK_RESPONSE
+    )
+    assert second_visitor.session_state["messages"][-1]["content"].startswith(
+        "Nerdbot has reached its hourly limit across all visitors."
+    )
+
+
+def test_app_does_not_rate_limit_offline_resource_requests() -> None:
+    """Curated resources cost nothing, so they should bypass the limiter."""
+    app = AppTest.from_string(
+        f'''
+import app
+app.OPENAI_API_KEY = "test-key"
+app.generate_resource_response = lambda request, topic: {MOCK_RESOURCE_RESPONSE!r}
+app.main()
+'''
+    ).run()
+
+    for _ in range(5):
+        app.chat_input[0].set_value("Recommend a book").run()
+
+    assert not app.warning
+    assert app.session_state["messages"][-1]["content"] == (
+        MOCK_RESOURCE_RESPONSE
+    )
 
 
 def test_app_routes_resource_request_without_changing_exercise_context() -> None:
