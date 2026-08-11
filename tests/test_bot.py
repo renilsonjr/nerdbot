@@ -79,6 +79,44 @@ def test_normal_topic_is_not_resource_request() -> None:
     assert not bot.is_resource_request("Explain Python decorators")
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        "how do video codecs work",
+        "video compression",
+        "course scheduling algorithm",
+        "book value accounting",
+        "recommendation systems",
+        "recommender algorithms",
+        "suggest an index for this table",
+    ],
+)
+def test_study_topic_containing_resource_word_is_not_resource_request(
+    user_input: str,
+) -> None:
+    """Topics that merely contain a resource word should stay on study flow.
+
+    A resource word used as a modifier ("video codecs") or a request verb
+    with no resource noun ("suggest an index") previously hijacked these
+    topics into the curated catalog, which answered with a dead-end prompt
+    instead of a lesson.
+    """
+    assert not bot.is_resource_request(user_input)
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        "what book should I read for SQL?",
+        "looking for a good Python tutorial",
+        "recommend a cybersecurity resource",
+    ],
+)
+def test_additional_resource_phrasings_are_detected(user_input: str) -> None:
+    """Natural recommendation phrasings should reach the resource flow."""
+    assert bot.is_resource_request(user_input)
+
+
 def test_answer_request_is_not_resource_request() -> None:
     """Exercise completion phrases should keep answer-request routing."""
     assert bot.is_answer_request("show answer")

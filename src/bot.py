@@ -32,22 +32,72 @@ ANSWER_REQUEST_PHRASES = {
     "i finished",
     "show answer",
 }
-RESOURCE_REQUEST_TERMS = {
+RESOURCE_REQUEST_SIGNALS = {
+    "any",
+    "best",
+    "find",
+    "give",
+    "good",
+    "looking",
+    "need",
+    "recommend",
+    "recommendation",
+    "recommendations",
+    "recommended",
+    "recommends",
+    "share",
+    "show",
+    "some",
+    "suggest",
+    "suggested",
+    "suggestion",
+    "suggestions",
+    "suggests",
+    "want",
+    "what",
+    "which",
+}
+RESOURCE_NOUNS = (
     "article",
     "articles",
     "book",
     "books",
     "course",
     "courses",
-    "recommend",
-    "recommendations",
-    "recommendation",
     "resource",
     "resources",
-    "suggest",
+    "tutorial",
+    "tutorials",
     "video",
     "videos",
-}
+)
+# A resource noun only counts when it closes its noun phrase: it must end the
+# message or be followed by a function word. This keeps compound study topics
+# such as "video codecs", "course scheduling", and "book value accounting" on
+# the normal study path, where the noun merely modifies the real subject.
+_PHRASE_TAIL_WORDS = (
+    "about",
+    "and",
+    "can",
+    "could",
+    "do",
+    "for",
+    "i",
+    "in",
+    "on",
+    "or",
+    "please",
+    "should",
+    "that",
+    "to",
+    "with",
+    "would",
+    "you",
+)
+RESOURCE_NOUN_PATTERN = re.compile(
+    rf"\b(?:{'|'.join(RESOURCE_NOUNS)})"
+    rf"(?:\s+(?:{'|'.join(_PHRASE_TAIL_WORDS)})\b|\s*$)"
+)
 RESOURCES_PATH = Path(__file__).resolve().parent.parent / "data" / "resources.json"
 
 
@@ -72,10 +122,20 @@ def validate_user_input(user_input: str) -> str | None:
 
 
 def is_resource_request(user_input: str) -> bool:
-    """Return whether the input asks for a learning resource."""
-    normalized_input = re.sub(r"[^\w\s]", " ", user_input.lower())
+    """Return whether the input asks for a learning resource.
+
+    A match needs both a request signal ("recommend", "any", "show") and a
+    resource noun that closes its noun phrase. Requiring both keeps study
+    topics that merely contain a resource word - "how do video codecs work",
+    "course scheduling algorithm" - on the normal study path.
+    """
+    normalized_input = " ".join(
+        re.sub(r"[^\w\s]", " ", user_input.lower()).split()
+    )
     words = set(normalized_input.split())
-    return bool(words & RESOURCE_REQUEST_TERMS)
+    if not words & RESOURCE_REQUEST_SIGNALS:
+        return False
+    return bool(RESOURCE_NOUN_PATTERN.search(normalized_input))
 
 
 def _load_resources() -> list[dict[str, Any]]:
